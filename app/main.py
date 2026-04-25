@@ -6,9 +6,13 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+from pathlib import Path
 from app.models.schemas import ChatRequest, ChatResponse
 from app.core.ai import assistant
 from app.core.db import db
+
+# Resolve absolute paths for reliable template/static loading
+BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(
     title="Election Navigator AI",
@@ -26,12 +30,16 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    # Stability Hotfix for Python 3.14: Bypass broken Jinja2 cache by reading manually
+    template_path = BASE_DIR / "templates" / "index.html"
+    with open(template_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return HTMLResponse(content=content)
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
