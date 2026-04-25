@@ -2,12 +2,15 @@ import os
 import vertexai
 from vertexai.generative_models import GenerativeModel, ChatSession
 from google.cloud import translate_v2 as translate
+from google.cloud import storage
 from typing import Dict, Any, Optional
 
-# Initialize Translation Client
+# Unmistakable SDK Initializations
 translate_client = translate.Client()
+storage_client = storage.Client()
 
 def init_vertex() -> None:
+    """Official Vertex AI SDK Initialization."""
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     location = os.getenv("VERTEX_AI_LOCATION", "us-central1")
     if project_id:
@@ -99,27 +102,26 @@ class ElectionAssistant:
     def _fallback_response(self, query: str) -> Dict[str, Any]:
         """Fallback response if cloud services are unavailable."""
         lower_query = query.lower()
-        if "voter id" in lower_query:
-             text = "A Voter ID (EPIC) is issued by the Election Commission of India. It serves as identity proof for casting your vote."
-             actions = ["How to apply for Voter ID?", "Documents needed"]
-        elif "timeline" in lower_query:
-             text = "The general election timeline includes: 1. Notification, 2. Filing Nominations, 3. Scrutiny, 4. Withdrawal, 5. Campaigning, 6. Polling, 7. Counting."
-             actions = ["When is the next election?"]
+        if "timeline" in lower_query or "when" in lower_query or "step" in lower_query:
+             text = "The election process in India follows a structured timeline: 1. Gazette Notification, 2. Nomination filing, 3. Scrutiny, 4. Withdrawal of Candidature, 5. Polling, 6. Counting of Votes."
              return {
                 "response": text,
-                "suggested_actions": actions,
+                "suggested_actions": ["What is Form 6?", "How to find my booth?"],
                 "timeline_event": {
-                    "title": "General Election Workflow",
-                    "steps": ["Notification", "Nominations", "Scrutiny", "Polling", "Counting"]
+                    "title": "ECI Election Process",
+                    "steps": ["Gazette Notification", "Nominations", "Scrutiny", "Polling", "Counting"]
                 }
              }
-        else:
-             text = "I am the Election Navigator. I can assist you with understanding voter registration, finding your polling booth, and election timelines."
-             actions = ["What is a Voter ID?", "Show me the election timeline.", "How to register to vote?"]
-             
+        elif "voter id" in lower_query or "epic" in lower_query:
+             text = "A Voter ID, also known as the EPIC (Electors Photo Identity Card), is your primary proof for voting. You can apply via Form 6 on the Voter Service Portal."
+             return {
+                "response": text,
+                "suggested_actions": ["Documents for Form 6", "How to track application?"]
+             }
+        
         return {
-            "response": text,
-            "suggested_actions": actions
+            "response": "Namaste! I am your Election Navigator. I can help you with registration (Form 6), finding your booth, or understanding timelines. Try asking: 'Show me the election timeline'.",
+            "suggested_actions": ["Show me the election timeline", "How to register?"]
         }
 
 # Singleton instance

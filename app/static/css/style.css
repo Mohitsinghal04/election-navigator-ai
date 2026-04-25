@@ -74,6 +74,8 @@ header {
     background: var(--primary-color);
     color: white;
     padding: 1.5rem 2rem;
+}
+
 .logo {
     display: flex;
     align-items: center;
