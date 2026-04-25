@@ -32,7 +32,7 @@ class ElectionAssistant:
         self.model = None
         if not _IS_MOCKED:
             self.model = GenerativeModel(
-                "gemini-1.5-flash-preview-0514", # Fast and efficient
+                "gemini-1.5-flash", # Stable and fast
                 system_instruction=[SYSTEM_INSTRUCTION]
             )
             
