@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Navigator AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <meta name="description" content="Interactive assistant for understanding the election process.">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">
+                <span class="icon">🗳️</span>
+                <h1>Election Navigator AI</h1>
+            </div>
+            <div class="controls">
+                <select id="language-select" aria-label="Select Language">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                </select>
+                <button id="theme-toggle" aria-label="Toggle Dark Mode">🌙</button>
+            </div>
+        </header>
+
+        <main class="chat-container">
+            <div id="chat-box" class="chat-box" role="log" aria-live="polite">
+                <div class="message bot-message fade-in">
+                    <div class="avatar">AI</div>
+                    <div class="content">
+                        <p>Welcome! I'm your Election Navigator. How can I help you understand the election process today?</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="suggestions" class="suggestions-container">
+                <button class="suggestion-btn" onclick="sendSuggestion('What is a Voter ID?')">What is a Voter ID?</button>
+                <button class="suggestion-btn" onclick="sendSuggestion('Show me the election timeline.')">Show me the election timeline.</button>
+                <button class="suggestion-btn" onclick="sendSuggestion('How to register to vote?')">How to register to vote?</button>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type your question..." aria-label="Chat input">
+                <button id="send-btn" aria-label="Send message">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </main>
+    </div>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
