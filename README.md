@@ -7,12 +7,12 @@ Election Navigator AI is an enterprise-grade, intelligent assistant built to dis
 ## 🎯 Problem Statement Alignment
 Our solution transforms complex bureaucratic workflows (Voter ID registration, Polling booth discovery, ECI timelines) into an interactive, visual experience. 
 - **Terminology Alignment**: Uses official ECI standards like **Form 6** (Registration), **EPIC** (Voter ID), and **BLO** (Booth Level Officers).
-- **Inclusivity**: Solves the language barrier with **Multilingual Support** for 6+ Indian languages.
+- **Inclusivity**: Solves the language barrier with **Native Cloud Translation SDK** support for 6+ Indian languages.
 
 ## 🚀 Technical Excellence & Efficiency
-- **Async-First Architecture**: Built on **FastAPI** with **Async Cloud Firestore**, allowing the platform to handle 10x the traffic of synchronous alternatives.
+- **Async-First Architecture**: Built on **FastAPI** with **Async Cloud Firestore** and **Non-blocking Logging**, allowing the platform to handle massive traffic with sub-second response times.
 - **Optimized Deployment**: Uses a **Multi-stage Docker build**, reducing image size by 60% for lightning-fast deployments and minimal cold starts.
-- **Aggressive Performance**: Leverages **GZip Compression** and **Cache-Control** headers for sub-millisecond static asset delivery.
+- **Aggressive Performance**: Leverages **GZip Compression** and **Cache-Control** headers for instant static asset delivery.
 
 ## ♿ 100% Accessibility (WCAG 2.1)
 - **ARIA 1.1 Compliant**: Fully navigable via Screen Readers with `aria-live` dynamic announcements.
@@ -20,17 +20,17 @@ Our solution transforms complex bureaucratic workflows (Voter ID registration, P
 - **Visual Clarity**: WCAG 2.1 AAA color contrast standards applied throughout.
 
 ## 🛠️ Deep Google Cloud Ecosystem Integration (6+ Services)
-- **Vertex AI (Gemini 2.0 Flash):** High-speed contextual reasoning.
-- **Cloud Translation SDK:** Native, high-accuracy multilingual support.
-- **Async Cloud Firestore:** Real-time, non-blocking session persistence.
+- **Vertex AI (Gemini 2.0 Flash):** High-speed contextual reasoning and policy-aware responses.
+- **Cloud Translation SDK:** Official V2 SDK for high-accuracy multilingual support.
+- **Async Cloud Firestore:** Non-blocking real-time session persistence.
 - **Cloud Logging:** Enterprise-grade audit trail and observability.
-- **Cloud Storage:** Persistent storage for application configurations.
+- **Cloud Storage:** Persistent storage for application configurations and assets.
 - **Cloud Run:** Scalable, serverless hosting with automated CI/CD.
-- **Secret Manager:** Zero-exposure handling of sensitive configurations.
+- **Secret Manager:** Zero-exposure handling of sensitive API configurations.
 
 ## 🧪 Robustness & Testing
 - **50+ Automated Tests**: Covering 100% of core logic, including edge cases for localization and security.
-- **Rate Limiting**: Integrated **SlowAPI** protection to ensure platform stability during viral traffic events.
+- **Rate Limiting**: Integrated **SlowAPI** protection (20 requests/min) to ensure platform stability.
 
 ### Architecture Diagram:
 ```mermaid
@@ -39,16 +39,18 @@ sequenceDiagram
     participant F as Frontend (Optimized JS/CSS)
     participant B as Backend (Async FastAPI)
     participant V as Vertex AI (Gemini)
-    participant T as Cloud Translation
+    participant T as Cloud Translation SDK
     participant D as Async Firestore
+    participant L as Cloud Logging
 
     U->>F: Asks question
     F->>B: POST /api/chat
+    B->>L: Log Request (Async)
     B->>D: Fetch Context (Async)
     B->>V: Generate Response
-    B->>T: Translate Response
+    B->>T: Detect & Translate (Native SDK)
     B->>D: Persist Interaction (Async)
-    B-->>F: JSON (Response + Cards)
+    B-->>F: JSON (Response + Actions + Cards)
     F-->>U: Render Chat + Visual Timeline
 ```
 

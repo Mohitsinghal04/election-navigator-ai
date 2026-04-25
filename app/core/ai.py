@@ -1,23 +1,34 @@
 import os
 import vertexai
 from vertexai.generative_models import GenerativeModel, ChatSession
-from google.cloud import translate_v2 as translate
+try:
+    from google.cloud import translate_v2 as translate
+except ImportError:
+    # Safe fallback for local environments without the SDK
+    translate = None
 from google.cloud import storage
 from typing import Dict, Any, Optional
 
-# Unmistakable SDK Initializations
-translate_client = translate.Client()
-storage_client = storage.Client()
+# Resilient SDK Initializations
+translate_client = None
+storage_client = None
+
+try:
+    if translate:
+        translate_client = translate.Client()
+    storage_client = storage.Client()
+except Exception as e:
+    print(f"Cloud SDKs disabled (Local mode): {e}")
 
 def init_vertex() -> None:
-    """Official Vertex AI SDK Initialization."""
+    """Official Vertex AI SDK Initialization with safety fallback."""
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     location = os.getenv("VERTEX_AI_LOCATION", "us-central1")
     if project_id:
         try:
             vertexai.init(project=project_id, location=location)
         except Exception as e:
-            print(f"Vertex AI Init Error: {e}")
+            print(f"Vertex AI not available (Local mode): {e}")
 
 # Call init immediately
 init_vertex()
@@ -73,7 +84,7 @@ class ElectionAssistant:
             text_out = response.text
             
             # Step 2: Use Cloud Translation if language is not English
-            if language != "en":
+            if language != "en" and translate_client:
                  result = translate_client.translate(text_out, target_language=language)
                  text_out = result["translatedText"]
                  

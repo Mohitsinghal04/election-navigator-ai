@@ -5,9 +5,13 @@ import datetime
 from typing import List, Dict, Any, Optional
 from google.cloud import firestore
 
-# Initialize Async Firestore Client
+# Initialize Async Firestore Client with safety fallback
 project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
-db_client = firestore.AsyncClient(project=project_id) if project_id else None
+try:
+    db_client = firestore.AsyncClient(project=project_id) if project_id else None
+except Exception as e:
+    print(f"Firestore disabled (Local mode): {e}")
+    db_client = None
 
 class Database:
     """Production-grade asynchronous database handler for Election Navigator AI."""
