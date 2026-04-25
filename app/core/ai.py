@@ -81,6 +81,14 @@ class ElectionAssistant:
         elif "timeline" in lower_query:
              text = "The general election timeline includes: 1. Notification, 2. Filing Nominations, 3. Scrutiny, 4. Withdrawal, 5. Campaigning, 6. Polling, 7. Counting."
              actions = ["When is the next election?"]
+             return {
+                "response": text,
+                "suggested_actions": actions,
+                "timeline_event": {
+                    "title": "General Election Workflow",
+                    "steps": ["Notification", "Nominations", "Scrutiny", "Polling", "Counting"]
+                }
+             }
         else:
              text = "I am the Election Navigator. I can assist you with understanding voter registration, finding your polling booth, and election timelines."
              actions = ["What is a Voter ID?", "Show me the election timeline.", "How to register to vote?"]

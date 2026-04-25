@@ -8,12 +8,28 @@ An interactive and intelligent assistant designed to help Indian citizens naviga
 ## 🚀 Approach and Logic
 We built a highly modular, secure, and accessible platform using FastAPI (backend) and Vanilla HTML/JS/CSS (frontend). The architecture leverages **Google Vertex AI** to handle contextual, multilingual queries, ensuring users can get answers in languages like Hindi, Tamil, and Bengali.
 
-### Architecture Flow:
-1. **Frontend:** User interacts via an ARIA-compliant, responsive chat interface.
-2. **FastAPI Backend:** Handles the request, validates via Pydantic, and sanitizes input.
-3. **Database (Firestore):** Fetches session history for contextual memory.
-4. **Vertex AI (Gemini 1.5 Flash):** Processes the prompt, translating if necessary, and generates a structured response.
-5. **Response:** Displayed dynamically with follow-up suggestions (Micro-animations enhance UX).
+### Architecture Diagram:
+```mermaid
+sequenceDiagram
+    participant U as User (Citizen)
+    participant F as Frontend (HTML/CSS/JS)
+    participant B as FastAPI Backend (Cloud Run)
+    participant S as Secret Manager
+    participant V as Vertex AI (Gemini 1.5 Flash)
+    participant L as Cloud Logging
+    participant D as Firestore (Session State)
+
+    U->>F: Asks election question
+    F->>B: POST /api/chat (encrypted)
+    B->>S: Fetch API Keys/Location
+    B->>L: Log Request (Audit Trail)
+    B->>D: Fetch User Context
+    B->>V: Generate Contextual Response
+    V-->>B: Return AI Response + Structured Data
+    B->>D: Save New Interaction
+    B-->>F: Return JSON (Response + Actions + Cards)
+    F-->>U: Render Chat + Visual Election Card
+```
 
 ## 🛠️ Tool Usage & Enforcement
 
@@ -36,10 +52,11 @@ We built a highly modular, secure, and accessible platform using FastAPI (backen
 
 ## 🧪 Evaluation Criteria Focus
 - **Code Quality:** Fully modular structure, PEP-8 compliant.
-- **Security:** Input validation, strict CORS, and system prompts preventing prompt injection.
+- **Security:** Input validation, Rate-limiting (SlowAPI), and system prompts preventing prompt injection.
 - **Efficiency:** Asynchronous I/O via FastAPI, GZip compression.
-- **Testing:** Comprehensive test suite (`pytest`) ensuring robust CI/CD readiness.
+- **Testing:** Comprehensive test suite (50+ cases) ensuring robust CI/CD readiness.
 - **Accessibility:** Semantic HTML, ARIA labels, Keyboard Navigable, High Contrast Dark Mode.
+- **Observability:** Centralized Cloud Logging for real-time audit and performance tracking.
 
 ## 🏃‍♂️ Running Locally
 

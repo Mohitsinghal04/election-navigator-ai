@@ -6,13 +6,31 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+import logging
 from pathlib import Path
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from google.cloud import logging as cloud_logging
+
 from app.models.schemas import ChatRequest, ChatResponse
 from app.core.ai import assistant
 from app.core.db import db
 
 # Resolve absolute paths for reliable template/static loading
 BASE_DIR = Path(__file__).resolve().parent
+
+# Initialize Observability (Cloud Logging)
+try:
+    log_client = cloud_logging.Client()
+    log_client.setup_logging()
+    logging.info("Cloud Logging initialized.")
+except Exception:
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Local logging initialized.")
+
+# Initialize Security (Rate Limiting)
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Election Navigator AI",
@@ -21,6 +39,9 @@ app = FastAPI(
 )
 
 # Security and Performance Middleware
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # Restrict in production
@@ -42,12 +63,12 @@ async def index(request: Request):
     return HTMLResponse(content=content)
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat_endpoint(req: ChatRequest):
+@limiter.limit("10/minute")
+async def chat_endpoint(request: Request, req: ChatRequest):
+    logging.info(f"Chat request received for session: {req.session_id}")
+    
     # Retrieve history
     history = db.get_session_history(req.session_id)
-    
-    # In a real Vertex AI integration we'd convert history to the proper Content format.
-    # For now, we pass the query.
     
     # Log User Message
     db.append_message(req.session_id, "user", req.message)
@@ -60,7 +81,8 @@ async def chat_endpoint(req: ChatRequest):
     
     return ChatResponse(
         response=ai_result["response"],
-        suggested_actions=ai_result["suggested_actions"]
+        suggested_actions=ai_result["suggested_actions"],
+        timeline_event=ai_result.get("timeline_event")
     )
 
 @app.get("/health")

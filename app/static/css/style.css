@@ -267,3 +267,49 @@ select:focus, #theme-toggle:focus {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
 }
+
+/* Election Cards */
+.election-card {
+    background: var(--chat-bg);
+    border: 1px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 10px;
+    box-shadow: var(--shadow);
+    max-width: 100%;
+}
+
+.election-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.timeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--bot-msg-bg);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.step-num {
+    background: var(--primary-color);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+}

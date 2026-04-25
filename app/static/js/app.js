@@ -101,6 +101,11 @@ async function sendMessage(text) {
         removeTypingIndicator();
         appendMessage('AI', data.response);
         
+        // Render Election Card if data exists
+        if (data.timeline_event) {
+            renderElectionCard(data.timeline_event);
+        }
+        
         if (data.suggested_actions && data.suggested_actions.length > 0) {
             updateSuggestions(data.suggested_actions);
         }
@@ -109,6 +114,27 @@ async function sendMessage(text) {
         removeTypingIndicator();
         appendMessage('AI', 'Sorry, I am having trouble connecting to the network.');
     }
+}
+
+function renderElectionCard(event) {
+    const card = document.createElement('div');
+    card.className = 'election-card fade-in';
+    
+    let stepsHtml = event.steps.map((step, index) => `
+        <div class="step-item">
+            <span class="step-num">${index + 1}</span>
+            <span>${step}</span>
+        </div>
+    `).join('');
+    
+    card.innerHTML = `
+        <h3>${event.title}</h3>
+        <div class="timeline-steps">
+            ${stepsHtml}
+        </div>
+    `;
+    chatBox.appendChild(card);
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 // Attach to suggestion buttons
