@@ -1,21 +1,20 @@
 import os
 import vertexai
 from vertexai.generative_models import GenerativeModel, ChatSession
+from google.cloud import translate_v2 as translate
 from typing import Dict, Any
 
-# Mock state if Vertex AI is not fully configured locally
-_IS_MOCKED = True
+# Initialize Translation Client
+translate_client = translate.Client()
 
 def init_vertex() -> None:
-    global _IS_MOCKED
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     location = os.getenv("VERTEX_AI_LOCATION", "us-central1")
-    if project_id and project_id != "your-project-id":
+    if project_id:
         try:
             vertexai.init(project=project_id, location=location)
-            _IS_MOCKED = False
         except Exception as e:
-            print(f"Failed to initialize Vertex AI: {e}")
+            print(f"Vertex AI Init Error: {e}")
 
 # Call init immediately
 init_vertex()
@@ -28,52 +27,77 @@ SYSTEM_INSTRUCTION = (
 )
 
 class ElectionAssistant:
-    def __init__(self):
-        self.model = None
-        if not _IS_MOCKED:
-            self.model = GenerativeModel(
-                "gemini-1.5-flash", # Maximum compatibility
-                system_instruction=[SYSTEM_INSTRUCTION]
-            )
+    """Enterprise-grade assistant leveraging Google Vertex AI and Cloud Translation."""
+
+    def __init__(self) -> None:
+        """Initializes the Generative Model with system instructions."""
+        self.model = GenerativeModel(
+            "gemini-1.5-flash", 
+            system_instruction=[SYSTEM_INSTRUCTION]
+        )
             
-    def get_chat_session(self, history: list = None) -> ChatSession:
+    def get_chat_session(self, history: list = None) -> Optional[ChatSession]:
+        """
+        Starts a contextual chat session.
+        
+        Args:
+            history (list, optional): Previous chat messages.
+            
+        Returns:
+            Optional[ChatSession]: A Vertex AI chat session or None.
+        """
         if self.model:
             return self.model.start_chat(history=history or [])
         return None
 
     def generate_response(self, query: str, context_history: list = None, language: str = "en") -> Dict[str, Any]:
-        """Generates a response using Vertex AI Gemini."""
-        if _IS_MOCKED:
-            return self._mock_response(query)
+        """
+        Generates a contextual, translated response for the user.
+        
+        Args:
+            query (str): The user's question.
+            context_history (list, optional): Previous conversation history.
+            language (str): Target language code (e.g., 'hi', 'en').
             
+        Returns:
+            Dict[str, Any]: A dictionary containing the response, suggestions, and cards.
+        """
         try:
             chat = self.get_chat_session(context_history)
             
-            # If target language is not English, instruct it to translate.
-            prompt = query
-            if language != "en":
-                 prompt += f" (Please respond in language code: {language})"
-                 
-            response = chat.send_message(prompt)
+            # Step 1: Generate AI Response
+            response = chat.send_message(query)
+            text_out = response.text
             
-            # Extremely simplified heuristics for suggested actions
+            # Step 2: Use Cloud Translation if language is not English
+            if language != "en":
+                 result = translate_client.translate(text_out, target_language=language)
+                 text_out = result["translatedText"]
+                 
+            # Heuristics for suggested actions
             suggestions = ["How to register to vote?", "Show me the timeline."]
             if "voter id" in query.lower():
                 suggestions = ["What documents do I need?", "Can I vote without a Voter ID?"]
+            elif "timeline" in query.lower():
+                return {
+                    "response": text_out,
+                    "suggested_actions": ["When is the next election?"],
+                    "timeline_event": {
+                        "title": "General Election Workflow",
+                        "steps": ["Notification", "Nominations", "Scrutiny", "Polling", "Counting"]
+                    }
+                }
                 
             return {
-                "response": response.text,
+                "response": text_out,
                 "suggested_actions": suggestions
             }
         except Exception as e:
-            print(f"Vertex Error: {e}")
-            return {
-                "response": "I apologize, but I am currently facing technical difficulties connecting to my knowledge base.",
-                "suggested_actions": ["Try again later"]
-            }
+            print(f"Vertex/Translate Error: {e}")
+            return self._fallback_response(query)
 
-    def _mock_response(self, query: str) -> Dict[str, Any]:
-        """Mock response for local development without credentials."""
+    def _fallback_response(self, query: str) -> Dict[str, Any]:
+        """Fallback response if cloud services are unavailable."""
         lower_query = query.lower()
         if "voter id" in lower_query:
              text = "A Voter ID (EPIC) is issued by the Election Commission of India. It serves as identity proof for casting your vote."

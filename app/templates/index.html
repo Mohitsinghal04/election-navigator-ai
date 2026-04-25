@@ -9,27 +9,29 @@
     <meta name="description" content="Interactive assistant for understanding the election process.">
 </head>
 <body>
+    <a href="#chat-box" class="skip-link">Skip to chat content</a>
     <div class="app-container">
-        <header class="header">
+        <header role="banner">
             <div class="logo">
                 <span class="icon">🗳️</span>
                 <h1>Election Navigator AI</h1>
+                <p>Official Information Assistant for Indian Citizens</p>
             </div>
             <div class="controls">
                 <select id="language-select" aria-label="Select Language">
                     <option value="en">English</option>
-                    <option value="hi">हिंदी (Hindi)</option>
-                    <option value="ta">தமிழ் (Tamil)</option>
-                    <option value="te">తెలుగు (Telugu)</option>
-                    <option value="mr">मराठी (Marathi)</option>
-                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="hi">Hindi (हिन्दी)</option>
+                    <option value="ta">Tamil (தமிழ்)</option>
+                    <option value="te">Telugu (తెలుగు)</option>
+                    <option value="bn">Bengali (বাংলা)</option>
+                    <option value="mr">Marathi (मराठी)</option>
                 </select>
-                <button id="theme-toggle" aria-label="Toggle Dark Mode">🌙</button>
+                <button id="theme-toggle" aria-label="Toggle Dark Mode" title="Toggle Theme">🌙</button>
             </div>
         </header>
 
-        <main class="chat-container">
-            <div id="chat-box" class="chat-box" role="log" aria-live="polite">
+        <main id="chat-box" role="log" aria-live="polite" aria-label="Chat messages history" class="chat-container">
+            <div class="chat-box">
                 <div class="message bot-message fade-in">
                     <div class="avatar">AI</div>
                     <div class="content">

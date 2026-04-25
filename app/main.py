@@ -51,33 +51,53 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    # Stability Hotfix for Python 3.14: Bypass broken Jinja2 cache by reading manually
+async def index(request: Request) -> HTMLResponse:
+    """
+    Serves the main application landing page.
+    Bypasses template cache for local compatibility while maintaining efficiency via manual IO.
+    """
     template_path = BASE_DIR / "templates" / "index.html"
-    with open(template_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    return HTMLResponse(content=content)
+    try:
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return HTMLResponse(content=content, headers={"Cache-Control": "public, max-age=3600"})
+    except Exception as e:
+        logging.error(f"Failed to load index template: {e}")
+        raise HTTPException(status_code=500, detail="Template loading error")
+
+# Optimized static mounting with caching
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), html=True), name="static")
+
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
 
 @app.post("/api/chat", response_model=ChatResponse)
-@limiter.limit("10/minute")
-async def chat_endpoint(request: Request, req: ChatRequest):
-    logging.info(f"Chat request received for session: {req.session_id}")
+@limiter.limit("20/minute")
+async def chat_endpoint(request: Request, req: ChatRequest) -> ChatResponse:
+    """
+    Primary endpoint for the AI chat assistant.
+    Coordinates database history retrieval, AI generation, and real-time translation.
+    """
+    logging.info(f"Chat request initiated | Session: {req.session_id} | Language: {req.language}")
     
-    # Retrieve history
-    history = db.get_session_history(req.session_id)
+    # Concurrent retrieval of session history (Efficiency)
+    history = await db.get_session_history(req.session_id)
     
-    # Log User Message
-    db.append_message(req.session_id, "user", req.message)
+    # Persistent logging of user interaction
+    await db.append_message(req.session_id, "user", req.message)
     
-    # Generate Response
+    # Generate and Translate response
     ai_result = assistant.generate_response(req.message, context_history=history, language=req.language)
     
-    # Log AI Message
-    db.append_message(req.session_id, "model", ai_result["response"])
+    # Persistent logging of AI response
+    await db.append_message(req.session_id, "model", ai_result["response"])
     
     return ChatResponse(
         response=ai_result["response"],

@@ -25,6 +25,21 @@
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
 }
 
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -43,26 +58,22 @@ body {
 }
 
 .app-container {
-    width: 100%;
     max-width: 900px;
-    height: 95vh;
+    margin: 20px auto;
     background: var(--chat-bg);
-    border-radius: 20px;
+    border-radius: 12px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
+    height: 90vh;
     overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+header {
+    background: var(--primary-color);
+    color: white;
     padding: 1.5rem 2rem;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--chat-bg);
-}
-
 .logo {
     display: flex;
     align-items: center;
