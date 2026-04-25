@@ -1,17 +1,21 @@
 """
 Pydantic schemas for the application.
 """
-# pylint: disable=missing-class-docstring,wrong-import-order
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
 
 
 class ChatMessage(BaseModel):
+    """Schema for a single chat message."""
+
     role: str = Field(..., description="Role of the sender: 'user' or 'model'")
     content: str = Field(..., description="Content of the message")
 
 
 class ChatRequest(BaseModel):
+    """Schema for an incoming chat request."""
+
     session_id: str = Field(..., description="Unique session ID for the user")
     message: str = Field(..., description="The user's query")
     language: str = Field(
@@ -20,6 +24,8 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    """Schema for the outgoing chat response."""
+
     response: str = Field(..., description="The assistant's reply")
     suggested_actions: List[str] = Field(
         default_factory=list, description="Follow-up suggestions"

@@ -1,24 +1,23 @@
 """
 Main application module for Election Navigator AI.
 """
-# pylint: disable=broad-exception-caught,missing-function-docstring,logging-fstring-interpolation,unused-argument,wrong-import-order
-from fastapi import FastAPI, Request, HTTPException
+import logging
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-
-import logging
-from pathlib import Path
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 from google.cloud import logging as cloud_logging
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
-from app.models.schemas import ChatRequest, ChatResponse
 from app.core.ai import assistant
 from app.core.db import db
+from app.models.schemas import ChatRequest, ChatResponse
 
 # Resolve absolute paths for reliable template/static loading
 BASE_DIR = Path(__file__).resolve().parent
@@ -62,7 +61,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request) -> HTMLResponse:
+async def index(_request: Request) -> HTMLResponse:
     """
     Serves the main application landing page.
     Bypasses template cache for local compatibility while maintaining efficiency via manual IO.
@@ -74,8 +73,8 @@ async def index(request: Request) -> HTMLResponse:
         return HTMLResponse(
             content=content, headers={"Cache-Control": "public, max-age=3600"}
         )
-    except Exception as e:
-        logging.error(f"Failed to load index template: {e}")
+    except OSError as e:
+        logging.error("Failed to load index template: %s", e)
         raise HTTPException(status_code=500, detail="Template loading error") from e
 
 
@@ -101,13 +100,15 @@ async def add_cache_headers(request: Request, call_next):
 
 @app.post("/api/chat", response_model=ChatResponse)
 @limiter.limit("20/minute")
-async def chat_endpoint(request: Request, req: ChatRequest) -> ChatResponse:
+async def chat_endpoint(_request: Request, req: ChatRequest) -> ChatResponse:
     """
     Primary endpoint for the AI chat assistant.
     Coordinates database history retrieval, AI generation, and real-time translation.
     """
     logging.info(
-        f"Chat request initiated | Session: {req.session_id} | Language: {req.language}"
+        "Chat request initiated | Session: %s | Language: %s",
+        req.session_id,
+        req.language,
     )
 
     # Concurrent retrieval of session history (Efficiency)

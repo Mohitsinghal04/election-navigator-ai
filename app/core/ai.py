@@ -2,14 +2,13 @@
 Core AI Module for Election Navigator.
 Handles Vertex AI integration and translation.
 """
-# pylint: disable=broad-exception-caught,no-name-in-module,line-too-long,no-else-return
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import vertexai
-from vertexai.generative_models import GenerativeModel, ChatSession
-from google.cloud import translate_v2 as translate
 from google.cloud import storage
+from google.cloud import translate_v2 as translate
+from vertexai.generative_models import ChatSession, GenerativeModel
 
 # Resilient SDK Initializations
 translate_client = None
@@ -18,7 +17,7 @@ storage_client = None
 try:
     translate_client = translate.Client()
     storage_client = storage.Client()
-except Exception as e:
+except OSError as e:
     print(f"Cloud SDKs disabled (Local mode): {e}")
 
 
@@ -30,7 +29,7 @@ def init_vertex() -> None:
     if project_id:
         try:
             vertexai.init(project=project_id, location=location)
-        except Exception as e:
+        except OSError as e:
             print(f"Vertex AI not available (Local mode): {e}")
 
 
@@ -50,9 +49,13 @@ class ElectionAssistant:
 
     def __init__(self) -> None:
         """Initializes the Generative Model with system instructions."""
-        self.model = GenerativeModel(
-            "gemini-1.5-flash", system_instruction=[SYSTEM_INSTRUCTION]
-        )
+        try:
+            self.model = GenerativeModel(
+                "gemini-1.5-flash", system_instruction=[SYSTEM_INSTRUCTION]
+            )
+        except OSError as e:
+            print(f"Vertex AI Model initialization failed (Local mode): {e}")
+            self.model = None
 
     def get_chat_session(self, history: list = None) -> Optional[ChatSession]:
         """
@@ -88,7 +91,7 @@ class ElectionAssistant:
                 # Attempt to fetch dynamic config (proves GCS usage)
                 bucket = storage_client.bucket("election-navigator-config")
                 _ = bucket.blob("config.json").exists()
-            except Exception:
+            except OSError:
                 pass
 
         try:
@@ -127,7 +130,7 @@ class ElectionAssistant:
                 }
 
             return {"response": text_out, "suggested_actions": suggestions}
-        except Exception as e:
+        except OSError as e:
             print(f"Vertex/Translate Error: {e}")
             return self._fallback_response(query)
 
@@ -135,7 +138,11 @@ class ElectionAssistant:
         """Fallback response if cloud services are unavailable."""
         lower_query = query.lower()
         if "timeline" in lower_query or "when" in lower_query or "step" in lower_query:
-            text = "The election process in India follows a structured timeline: 1. Gazette Notification, 2. Nomination filing, 3. Scrutiny, 4. Withdrawal of Candidature, 5. Polling, 6. Counting of Votes."
+            text = (
+                "The election process in India follows a structured timeline: "
+                "1. Gazette Notification, 2. Nomination filing, 3. Scrutiny, "
+                "4. Withdrawal of Candidature, 5. Polling, 6. Counting of Votes."
+            )
             return {
                 "response": text,
                 "suggested_actions": ["What is Form 6?", "How to find my booth?"],
@@ -150,8 +157,12 @@ class ElectionAssistant:
                     ],
                 },
             }
-        elif "voter id" in lower_query or "epic" in lower_query:
-            text = "A Voter ID, also known as the EPIC (Electors Photo Identity Card), is your primary proof for voting. You can apply via Form 6 on the official Voter Service Portal (voters.eci.gov.in)."
+        if "voter id" in lower_query or "epic" in lower_query:
+            text = (
+                "A Voter ID, also known as the EPIC (Electors Photo Identity Card), "
+                "is your primary proof for voting. You can apply via Form 6 on the "
+                "official Voter Service Portal (voters.eci.gov.in)."
+            )
             return {
                 "response": text,
                 "suggested_actions": [
@@ -160,8 +171,13 @@ class ElectionAssistant:
                 ],
             }
 
+        text = (
+            "Namaste! I am your Election Navigator. I can help you with registration "
+            "(Form 6 at voters.eci.gov.in), finding your booth, or understanding timelines. "
+            "Try asking: 'Show me the election timeline'."
+        )
         return {
-            "response": "Namaste! I am your Election Navigator. I can help you with registration (Form 6 at voters.eci.gov.in), finding your booth, or understanding timelines. Try asking: 'Show me the election timeline'.",
+            "response": text,
             "suggested_actions": ["Show me the election timeline", "How to register?"],
         }
 
