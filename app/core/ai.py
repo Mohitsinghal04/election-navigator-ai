@@ -2,7 +2,7 @@ import os
 import vertexai
 from vertexai.generative_models import GenerativeModel, ChatSession
 from google.cloud import translate_v2 as translate
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 # Initialize Translation Client
 translate_client = translate.Client()
