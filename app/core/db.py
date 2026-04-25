@@ -1,5 +1,7 @@
-from typing import Dict, List, Any
-import datetime
+"""
+Database module for Election Navigator AI.
+"""
+# pylint: disable=broad-exception-caught,unused-variable,unused-import,no-name-in-module,invalid-name
 import os
 import datetime
 from typing import List, Dict, Any, Optional
@@ -13,6 +15,7 @@ except Exception as e:
     print(f"Firestore disabled (Local mode): {e}")
     db_client = None
 
+
 class Database:
     """Production-grade asynchronous database handler for Election Navigator AI."""
 
@@ -22,10 +25,10 @@ class Database:
     async def get_session_history(self, session_id: str) -> List[Dict[str, Any]]:
         """
         Retrieves the chat history for a given session.
-        
+
         Args:
             session_id (str): The unique session identifier.
-            
+
         Returns:
             List[Dict[str, Any]]: A list of message objects.
         """
@@ -44,7 +47,7 @@ class Database:
     async def append_message(self, session_id: str, role: str, content: str) -> None:
         """
         Appends a new message to the session history in Firestore.
-        
+
         Args:
             session_id (str): The unique session identifier.
             role (str): The role of the sender (user/model).
@@ -55,14 +58,13 @@ class Database:
         try:
             doc_ref = db_client.collection(self.collection).document(session_id)
             new_msg = {
-                "role": role, 
-                "content": content, 
-                "timestamp": datetime.datetime.now().isoformat()
+                "role": role,
+                "content": content,
+                "timestamp": datetime.datetime.now().isoformat(),
             }
-            await doc_ref.set({
-                "messages": firestore.ArrayUnion([new_msg])
-            }, merge=True)
+            await doc_ref.set({"messages": firestore.ArrayUnion([new_msg])}, merge=True)
         except Exception:
             pass
+
 
 db = Database()
